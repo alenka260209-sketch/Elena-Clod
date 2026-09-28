@@ -1,0 +1,40 @@
+name: Bitrix24 → Google Calendar
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Пробный запуск (ничего не записывать)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: bitrix-calendar-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: .claude/skills/bitrix-google-calendar/scripts/requirements.txt
+      - run: pip install -r .claude/skills/bitrix-google-calendar/scripts/requirements.txt
+      - name: Sync
+        env:
+          BITRIX_WEBHOOK_URL: ${{ secrets.BITRIX_WEBHOOK_URL }}
+          GOOGLE_CALENDAR_ID: ${{ secrets.GOOGLE_CALENDAR_ID }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          BITRIX_USER_ID: ${{ vars.BITRIX_USER_ID }}
+          REMINDER_MINUTES: ${{ vars.REMINDER_MINUTES || '1440,60' }}
+          EVENT_DURATION_MINUTES: ${{ vars.EVENT_DURATION_MINUTES || '30' }}
+          LOOKBACK_DAYS: ${{ vars.LOOKBACK_DAYS || '90' }}
+          COMPLETED_ACTION: ${{ vars.COMPLETED_ACTION || 'mark' }}
+          TIMEZONE: ${{ vars.TIMEZONE || 'Europe/Moscow' }}
+        run: python3 .claude/skills/bitrix-google-calendar/scripts/sync.py ${{ inputs.dry_run && '--dry-run' || '' }}
