@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(python3 .claude/skills/bitrix-google-calendar/scripts/sync.py --dry-run:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  }
+}
